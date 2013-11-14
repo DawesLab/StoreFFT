@@ -1,10 +1,7 @@
-//Basic Acquisition Sample
+//Store the FFT data (middle 10 rows) from a full-frame shot.
 //The sample will open the first camera attached
-//and acquire 5 frames.  Part 2 of the sample will collect
-//1 frame of data each time the function is called, looping
-//through 5 times.
-
-// TODO: add command line flags to specify saving full FFT or an ROI
+//and acquire a specified number of frames without 
+//displaying image or other interruptions.
 
 #define NUM_FRAMES  5
 #define NO_TIMEOUT  -1
@@ -215,6 +212,7 @@ int main(int ac, char* av[])
 	std::cout << "Enter the output type (1 -> Full, 0-> ROI): ";
 	std::cin >> fullOutput;
 
+    FileStorage fs("test.yml", FileStorage::WRITE); // This is an easy way, but uses space!
 
     for (int i = 0; i < numShots; i++)
     {
@@ -250,25 +248,16 @@ int main(int ac, char* av[])
 	    realI = realI(Rect(0, 0, realI.cols & -2, realI.rows & -2));
 	    imagI = imagI(Rect(0, 0, imagI.cols & -2, imagI.rows & -2));
 
-	    if (verboseOutput) std::cout << "Display data\n" ;
 
-	    imshow("Input Image", image);    // Show the result
-	    waitKey();
-	    imshow("spectrum (mag)", magI);
-	    waitKey();
-	    // if( waitKey(30) >= 0 ) break; // wait 30 ms for key interrupt
 
-	    if(i == 0){
-	    	FileStorage fs("test.yml", FileStorage::WRITE); // This is an easy way, but uses space!
+    	fs << "frame number" << i;
+    	fs << "image" << image.rowRange(Range(195,205)); // save middle 10 rows
+    	fs << "fft-real" << realI.rowRange(Range(195,205)); // save both real and imag parts of FFT
+    	fs << "fft-imag" << imagI.rowRange(Range(195,205)); 
 
-	    	fs << "frame number" << i;
-	    	fs << "image" << image.rowRange(Range(195,205)); // save middle 10 rows
-	    	fs << "fft-real" << realI.rowRange(Range(195,205)); // save both real and imag parts of FFT
-	    	fs << "fft-imag" << imagI.rowRange(Range(195,205)); 
-	    	fs.release();
-	    	//imwrite("datafile.png", image.rowRange(Range(195,205)));
-	    }
+
 	}
+    fs.release();
 
 	Picam_CloseCamera( camera );
     Picam_UninitializeLibrary();
